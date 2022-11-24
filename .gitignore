@@ -1,4 +1,3 @@
 /node_modules/
-/.idea/
-/yarn.lock/
-.DS_Store
+yarn.lock
+*.DS_Store
