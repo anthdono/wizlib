@@ -3,10 +3,6 @@
   "version": "1.0.0",
   "main": "tester.js",
   "license": "MI",
-  "scripts": {
-    "watch": "tsc -w",
-    "dev": "nodemon ./dist/tester.js"
-  },
   "dependencies": {
     "@types/node": "^17.0.33",
     "nodemon": "^2.0.16"
