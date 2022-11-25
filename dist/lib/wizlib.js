@@ -1,20 +1,30 @@
-import dgram from "node:dgram";
-
-export class Bulb {
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.Bulb = void 0;
+const node_dgram_1 = __importDefault(require("node:dgram"));
+class Bulb {
+    /**
+     * @description creates a bulb object
+     * @param {ip} ip the bulbs ip address
+     * @param {port} port the bulbs port, defaults to 38899 if not provided
+     */
+    constructor(ip, port = Bulb.DEFAULT_PORT) {
+        this.ip = ip;
+        this.port = port;
+        this.getPilot(); // set local state
+    }
     /**
      * @description discovers bulbs on the network
      * @returns an array of objects containing bulb ip and on/off state
      */
-    public static discover(): Promise<
-        { ip: string; isOn: boolean | undefined }[]
-    > {
+    static discover() {
         // create dgram socket object
-        const client = dgram.createSocket("udp4");
+        const client = node_dgram_1.default.createSocket("udp4");
         // create an array of objects to represent discovered bulbs
-        let bulbsDiscovered = new Array<{
-            ip: string;
-            isOn: boolean | undefined;
-        }>();
+        let bulbsDiscovered = new Array();
         // promise resolves after waiting for constant DISCOVERY_TIME
         return new Promise((resolve, _) => {
             client.bind(Bulb.DEFAULT_PORT, () => {
@@ -28,85 +38,74 @@ export class Bulb {
                 }, Bulb.DISCOVERY_TIME);
                 // listen for bulbs
                 client.on("message", (res, deviceInfo) => {
+                    var _a;
                     // ip addr of discovered bulb
                     const ip = deviceInfo.address;
                     // on/off state of discovered bulb (undefined in some instances)
-                    const isOn = JSON.parse(res.toString("utf8")).result?.state;
+                    const isOn = (_a = JSON.parse(res.toString("utf8")).result) === null || _a === void 0 ? void 0 : _a.state;
                     // add discovered bulb obj to array
                     bulbsDiscovered.push({ ip, isOn });
                 });
                 // broadcast message
-                client.send(
-                    Bulb.formatMessage("getPilot", ""),
-                    Bulb.DEFAULT_PORT,
-                    "255.255.255.255"
-                );
+                client.send(Bulb.formatMessage("getPilot", ""), Bulb.DEFAULT_PORT, "255.255.255.255");
             });
         });
     }
-
     /**
      * @description updates the local bulb state from remote and returns the object
      * @return {Promise<State>} the bulb's state
      */
-    public async getState(): Promise<State> {
+    async getState() {
         await this.getPilot();
         return this.state;
     }
-
     /**
      * @description increases bulb dimming by a tenth
      */
-    public increaseDimming() {
+    increaseDimming() {
         // undefined check
         if (this.state.dimming == undefined)
             // TODO should this be MAX?
             this.state.dimming = Bulb.MIN_DIMMING_RANGE;
         // return if changes would result in illegal value
-        if (
-            this.state.dimming + Bulb.DIMMING_INCREMENTS >
-            Bulb.MAX_DIMMING_RANGE
-        )
+        if (this.state.dimming + Bulb.DIMMING_INCREMENTS >
+            Bulb.MAX_DIMMING_RANGE)
             return;
         // update local value
         this.state.dimming += Bulb.DIMMING_INCREMENTS;
         // update remote value
         this.setPilot();
     }
-
     /**
      * @description decreases bulb dimming by a tenth
      */
-    public decreaseDimming() {
+    decreaseDimming() {
         // undefined check
         if (this.state.dimming == undefined)
             // TODO should this be MIN?
             this.state.dimming = Bulb.MAX_DIMMING_RANGE;
         // return if changes would result in illegal value
-        if (
-            this.state.dimming - Bulb.DIMMING_INCREMENTS <
-            Bulb.MIN_DIMMING_RANGE
-        )
+        if (this.state.dimming - Bulb.DIMMING_INCREMENTS <
+            Bulb.MIN_DIMMING_RANGE)
             return;
         // update local value
         this.state.dimming += Bulb.DIMMING_INCREMENTS;
         // update remote value
         this.setPilot();
     }
-
     /**
      * @description increases an rgb color value on the bulb by a seventeenth
      * @param {color} color to be increase
      */
-    public increaseColor(color: "r" | "g" | "b") {
+    increaseColor(color) {
         // undefined check
         if (this.state[color] == undefined)
             this.state[color] = Bulb.MIN_COLOR_RANGE;
         // return if changes would result in illegal value
-        if (this.state[color]! + Bulb.COLOR_INCREMENTS > Bulb.MAX_COLOR_RANGE)
+        if (this.state[color] + Bulb.COLOR_INCREMENTS > Bulb.MAX_COLOR_RANGE)
             return;
         // update local value
-        this.state[color]! += Bulb.COLOR_INCREMENTS;
+        this.state[color] += Bulb.COLOR_INCREMENTS;
         // update remote value
         this.setPilot();
     }
@@ -114,89 +113,49 @@ export class Bulb {
      * @description decreases an rgb color value on the bulb by a seventeenth
      * @param {color} color to be decreased
      */
-    public decreaseColor(color: "r" | "g" | "b") {
+    decreaseColor(color) {
         // undefined check
         if (this.state[color] === undefined)
             this.state[color] = Bulb.MAX_COLOR_RANGE;
         // return if changes would result in illegal value
-        if (this.state[color]! - Bulb.COLOR_INCREMENTS < Bulb.MIN_COLOR_RANGE)
+        if (this.state[color] - Bulb.COLOR_INCREMENTS < Bulb.MIN_COLOR_RANGE)
             return;
         // update local value
-        this.state[color]! -= Bulb.COLOR_INCREMENTS;
+        this.state[color] -= Bulb.COLOR_INCREMENTS;
         // update remote value
         this.setPilot();
     }
-
     /**
      * @description updates local bulb state with remote bulb state, returns rgb values of state
      * @returns [[r,g,b]], values are undefined when unavailable
      */
-    public async getRGB(): Promise<
-        [number | undefined, number | undefined, number | undefined]
-    > {
+    async getRGB() {
         await this.getPilot();
         return [this.state.r, this.state.g, this.state.b];
     }
-
     /**
      * @description updates the local bulb state with provded rgb values, then updates the remote bulb state
      */
-    public setRGB(rgb: [number, number, number]) {
+    setRGB(rgb) {
         this.state.r = rgb[0];
         this.state.g = rgb[1];
         this.state.b = rgb[2];
         this.setPilot();
     }
-
-    // bulb discovery
-    private static DISCOVERY_TIME = 2000;
-
-    // default wiz bulb port
-    private static DEFAULT_PORT = 38899;
-
-    // color constants
-    private static COLOR_INCREMENTS = 15;
-    private static MIN_COLOR_RANGE = 0;
-    private static MAX_COLOR_RANGE = 255;
-
-    // dimming constants
-    private static MIN_DIMMING_RANGE = 0;
-    private static MAX_DIMMING_RANGE = 100;
-    private static DIMMING_INCREMENTS = 10;
-
-    // bulb's ip address
-    private ip: string;
-    // bulb's open port
-    private port: number;
-    // local state of bulb
-    private state: State;
-
-    /**
-     * @description creates a bulb object
-     * @param {ip} ip the bulbs ip address
-     * @param {port} port the bulbs port, defaults to 38899 if not provided
-     */
-    constructor(ip: string, port: number = Bulb.DEFAULT_PORT) {
-        this.ip = ip;
-        this.port = port;
-        this.getPilot(); // set local state
-    }
-
     // formats method/params args for sending to bulb
-    private static formatMessage(method: string, params: string) {
+    static formatMessage(method, params) {
         return `{"method": "${method}", "params": {${params}}}`;
     }
-
     /**
      * @description sends instruction/payload pair to remote bulb and listens for a resposne
      * @param {method} method the instruction
      * @param {params} method the payload
      * @returns {Promise<any>} the remote bulbs response
      */
-    private communicate(method: string, params: string): Promise<any> {
+    communicate(method, params) {
         return new Promise((resolve, _) => {
             // create dgram socket object
-            const client = dgram.createSocket("udp4");
+            const client = node_dgram_1.default.createSocket("udp4");
             // associate dgram client with remote bulb
             client.connect(this.port, this.ip, () => {
                 client.on("listening", () => {
@@ -222,60 +181,51 @@ export class Bulb {
             });
         });
     }
-
     /**
      * @description updates local bulb state with remote bulb state
      */
-    private async getPilot() {
-        const state = <State>await this.communicate("getPilot", "");
+    async getPilot() {
+        const state = await this.communicate("getPilot", "");
         this.state = state;
     }
-
     /**
      * @description updates remote bulb state with local bulb state
      */
-    private async setPilot(): Promise<void> {
+    async setPilot() {
         // allow 5 attempts to update remote bulb with local state
         let attempts = 5;
         while (attempts > 0) {
-            const res: { success: boolean } = await this.communicate(
-                "setPilot",
-                `"state":${this.state.state},
+            const res = await this.communicate("setPilot", `"state":${this.state.state},
                              "r":${this.state.r},
                              "g":${this.state.g},
                              "b":${this.state.b},
-                             "dimming":${this.state.dimming}`
-            );
+                             "dimming":${this.state.dimming}`);
             // exit attempt loop if success
-            if (res.success) return;
+            if (res.success)
+                return;
             attempts--; // decrement available attempts
         }
         // throw error if all attempts to update remote bulb state failed
         throw new Error("setPilot failed with 5 attempts");
     }
-
     // UNUSED: gets remote bulb system configuration
     // @ts-ignore
-    private async getSystemConfig() {
+    async getSystemConfig() {
         const res = await this.communicate("getSystemConfig", "");
         return res;
     }
 }
-
-// represents a bulb's state
-type State = {
-    mac?: string; // MAC address
-    rssi?: number; // signal strength
-    src?: string; // source IP?
-    state?: boolean; // on/off
-    sceneId?: number; // preset scene
-
-    // 0 - 255
-    r?: number; // red
-    g?: number; // green
-    b?: number; // blue
-
-    dimming?: number; // dimming, 0 - 100, increments 10
-    c?: number; // color temperature
-    w?: number; // white
-};
+exports.Bulb = Bulb;
+// bulb discovery
+Bulb.DISCOVERY_TIME = 2000;
+// default wiz bulb port
+Bulb.DEFAULT_PORT = 38899;
+// color constants
+Bulb.COLOR_INCREMENTS = 15;
+Bulb.MIN_COLOR_RANGE = 0;
+Bulb.MAX_COLOR_RANGE = 255;
+// dimming constants
+Bulb.MIN_DIMMING_RANGE = 0;
+Bulb.MAX_DIMMING_RANGE = 100;
+Bulb.DIMMING_INCREMENTS = 10;
+//# sourceMappingURL=wizlib.js.map
