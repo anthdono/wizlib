@@ -32,7 +32,7 @@ export declare class Lib {
         b: number;
     }): Promise<void | BulbResponse[]>;
     private static sendUDPMessage;
-    static discoverBulbs(): Promise<{
+    protected static discoverBulbs(): Promise<{
         ip: string;
         state: string;
     }[] | undefined>;

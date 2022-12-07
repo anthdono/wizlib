@@ -144,7 +144,6 @@ class Lib {
                         if (bufmsg.byteLength == messageRaw.byteLength)
                             return;
                     const messageResult = JSON.parse(messageRaw.toString("utf8"))["result"];
-                    console.log(messageResult);
                     bulbResponse.push({ messageResult, rinfo });
                     if (!doBroadcast) {
                         socket.close();
