@@ -1,1 +1,1 @@
-export { Api as Wizlib } from "./lib/api";
+export { Api as Bulb } from "./lib/api";

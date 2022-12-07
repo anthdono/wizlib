@@ -1,22 +1,24 @@
-#### _wizlib_ - a minimal nodejs typescript library for interacting with wiz smartlights
+#### _wizlib_ - a minimal nodejs library written in typescript for interacting with wiz smartlights
 
 ```typescript
 import { Bulb } from "wizlib";
 
-...
+// discover bulbs on the network with the static method
+const discoveredBulbs = await Bulb.discover();
 
-// static async method that attempts to discover bulbs
-const bulbs =  await Bulb.discover();
+// returns an array of objects representing the bulbs found
+[
+    { ip: "192.168.1.102", state: "on" },
+    { ip: "192.168.1.103", state: "on" },
+    { ip: "192.168.1.123", state: "off" },
+];
 
-console.log(bulbs);
-> {: "192.168.1.15", }
-// where bulbs is an array of {ip: string, isOn boolean}
+// create a bulb instance
+const bulb = new Bulb("192.168.1.102");
 
-...
-
-// create bulb object for manipulation
-// ie from discovered bulbs
-const myBulb = new Bulb(bulbs[0].)
-
-
+// use the various inbuilt methods defined in the api
+bulb.turnOn();
+bulb.decreaseBrightness();
+bulb.setRGB(50, 255, 10);
+bulb.increaseRed();
 ```

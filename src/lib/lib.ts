@@ -199,7 +199,6 @@ export class Lib {
                         const messageResult = JSON.parse(
                             messageRaw.toString("utf8")
                         )["result"];
-                        console.log(messageResult);
                         bulbResponse.push({ messageResult, rinfo });
                         if (!doBroadcast) {
                             socket.close();
@@ -217,7 +216,7 @@ export class Lib {
         });
     }
 
-    public static async discoverBulbs() {
+    protected static async discoverBulbs() {
         const discoveredBulbs = await this.sendUDPMessage(
             "getPilot",
             "{}",
