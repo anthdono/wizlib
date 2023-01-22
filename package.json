@@ -1,13 +1,13 @@
 {
     "name": "wizlib",
-    "version": "1.0.6",
+    "version": "1.0.8",
     "main": "dist/index.js",
-    "types": "dist/lib/wizlib.d.ts",
+    "types": "dist/lib/api.d.ts",
     "scripts": {
         "build": "tsc -d"
     },
     "files": [
         "/dist"
     ],
-    "license": "MI"
+    "license": "MIT"
 }
