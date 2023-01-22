@@ -1,6 +1,8 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Bulb = void 0;
-var api_1 = require("./lib/api");
-Object.defineProperty(exports, "Bulb", { enumerable: true, get: function () { return api_1.Api; } });
+const api_1 = __importDefault(require("./lib/api"));
+exports.default = api_1.default;
 //# sourceMappingURL=index.js.map

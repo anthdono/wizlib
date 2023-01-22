@@ -21,7 +21,8 @@ class Lib {
             case "state":
                 switch (change) {
                     case "toggle":
-                        this.bulbStateManager.state = !this.bulbStateManager;
+                        this.bulbStateManager.state =
+                            !this.bulbStateManager.state;
                         break;
                     case "set":
                         this.bulbStateManager.state = value;
@@ -30,18 +31,13 @@ class Lib {
                 break;
             case "sceneId":
                 switch (change) {
-                    case "increase":
-                        this.bulbStateManager.sceneId++;
-                        break;
-                    case "decrease":
-                        this.bulbStateManager.sceneId--;
-                        break;
                     case "set":
                         this.bulbStateManager.sceneId = value;
                         break;
                 }
                 break;
             case "r":
+                this.ensureSceneCleared();
                 switch (change) {
                     case "increase":
                         this.bulbStateManager.r += Lib.FIELD_INCREMENT_BYTE;
@@ -55,6 +51,7 @@ class Lib {
                 }
                 break;
             case "g":
+                this.ensureSceneCleared();
                 switch (change) {
                     case "increase":
                         this.bulbStateManager.g += Lib.FIELD_INCREMENT_BYTE;
@@ -68,6 +65,7 @@ class Lib {
                 }
                 break;
             case "b":
+                this.ensureSceneCleared();
                 switch (change) {
                     case "increase":
                         this.bulbStateManager.b += Lib.FIELD_INCREMENT_BYTE;
@@ -83,28 +81,34 @@ class Lib {
             case "dimming":
                 switch (change) {
                     case "increase":
-                        this.bulbStateManager.dimming +=
-                            Lib.FIELD_INCREMENT_PERCENT;
+                        if (this.bulbStateManager.dimming)
+                            this.bulbStateManager.dimming +=
+                                Lib.FIELD_INCREMENT_PERCENT;
                         break;
                     case "decrease":
-                        this.bulbStateManager.dimming -=
-                            Lib.FIELD_INCREMENT_PERCENT;
+                        if (this.bulbStateManager.dimming)
+                            this.bulbStateManager.dimming -=
+                                Lib.FIELD_INCREMENT_PERCENT;
                         break;
                     case "set":
                         this.bulbStateManager.dimming = value;
                         break;
                 }
                 break;
-            case "c":
+            case "temp":
                 switch (change) {
                     case "increase":
-                        this.bulbStateManager.c += Lib.FIELD_INCREMENT_PERCENT;
+                        if (this.bulbStateManager.temp)
+                            this.bulbStateManager.temp +=
+                                Lib.FIELD_INCREMENT_PERCENT;
                         break;
                     case "decrease":
-                        this.bulbStateManager.c -= Lib.FIELD_INCREMENT_PERCENT;
+                        if (this.bulbStateManager.temp)
+                            this.bulbStateManager.temp -=
+                                Lib.FIELD_INCREMENT_PERCENT;
                         break;
                     case "set":
-                        this.bulbStateManager.c = value;
+                        this.bulbStateManager.temp = value;
                         break;
                 }
                 break;
@@ -121,9 +125,17 @@ class Lib {
                         break;
                 }
                 break;
-            case "color":
-                this.bulbStateManager.r = 255;
-                break;
+            case "colors": {
+                if (change != "set")
+                    throw new Error("collective colors can only be set");
+                if (Object.keys(value).includes("r" && "g" && "b")) {
+                    this.ensureSceneCleared();
+                    const { r, g, b } = value;
+                    this.bulbStateManager.r = r;
+                    this.bulbStateManager.g = g;
+                    this.bulbStateManager.b = b;
+                }
+            }
         }
         this.pushBulbState();
     }
@@ -133,12 +145,13 @@ class Lib {
         const bulbResponse = new Array();
         return new Promise((resolve, _) => {
             socket.bind(port, () => {
-                if (doBroadcast)
+                if (doBroadcast) {
                     socket.setBroadcast(true);
-                setTimeout(() => {
-                    socket.close();
-                    resolve(bulbResponse);
-                }, this.MS_TIMEOUT);
+                    setTimeout(() => {
+                        socket.close();
+                        resolve(bulbResponse);
+                    }, this.MS_TIMEOUT);
+                }
                 socket.on("message", (messageRaw, rinfo) => {
                     if (doBroadcast)
                         if (bufmsg.byteLength == messageRaw.byteLength)
@@ -185,6 +198,9 @@ class Lib {
         else
             throw new Error("No response from bulb");
     }
+    ensureSceneCleared() {
+        this.bulbStateManager.clearScene();
+    }
 }
 exports.Lib = Lib;
 Lib.MS_TIMEOUT = 2000;
@@ -198,60 +214,67 @@ class BulbStateManager {
     getStateSnapshot() {
         return this.bulbStateSnapshot;
     }
+    clearScene() {
+        this.sceneId = undefined;
+        delete this.sceneId;
+        this.temp = undefined;
+        delete this.temp;
+    }
     get state() {
         return this.bulbStateSnapshot.state;
-    }
-    get sceneId() {
-        return this.bulbStateSnapshot.sceneId;
-    }
-    get r() {
-        return this.bulbStateSnapshot.sceneId;
-    }
-    get g() {
-        return this.bulbStateSnapshot.g;
-    }
-    get b() {
-        return this.bulbStateSnapshot.b;
-    }
-    get dimming() {
-        return this.bulbStateSnapshot.dimming;
-    }
-    get c() {
-        return this.bulbStateSnapshot.c;
-    }
-    get w() {
-        return this.bulbStateSnapshot.w;
     }
     set state(state) {
         this.bulbStateSnapshot.state = state;
     }
+    get sceneId() {
+        return this.bulbStateSnapshot.sceneId;
+    }
     set sceneId(sceneId) {
-        if (sceneId < 1 || sceneId > 32)
-            return;
+        if (sceneId)
+            if (sceneId < 1 || sceneId > 32)
+                throw new Error("sceneId must be between 1 and 32");
         this.bulbStateSnapshot.sceneId = sceneId;
+    }
+    get r() {
+        return this.bulbStateSnapshot.r;
     }
     set r(r) {
         if (r < 0 || r > 255)
             return;
         this.bulbStateSnapshot.r = r;
     }
+    get g() {
+        return this.bulbStateSnapshot.g;
+    }
     set g(g) {
         if (g < 0 || g > 255)
             return;
         this.bulbStateSnapshot.g = g;
+    }
+    get b() {
+        return this.bulbStateSnapshot.b;
     }
     set b(b) {
         if (b < 0 || b > 255)
             return;
         this.bulbStateSnapshot.b = b;
     }
+    get dimming() {
+        return this.bulbStateSnapshot.dimming;
+    }
     set dimming(dimming) {
         if (dimming < 0 || dimming > 100)
             return;
         this.bulbStateSnapshot.dimming = dimming;
     }
-    set c(c) {
-        this.bulbStateSnapshot.c = c;
+    get temp() {
+        return this.bulbStateSnapshot.temp;
+    }
+    set temp(temp) {
+        this.bulbStateSnapshot.temp = temp;
+    }
+    get w() {
+        return this.bulbStateSnapshot.w;
     }
     set w(w) {
         this.bulbStateSnapshot.w = w;

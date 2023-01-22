@@ -2,12 +2,12 @@
 import dgram from "node:dgram";
 type BulbStateSnapshot = {
     state: boolean;
-    sceneId: number;
+    sceneId?: number;
     r: number;
     g: number;
     b: number;
     dimming: number;
-    c: number;
+    temp?: number;
     w: number;
 };
 type BulbSystemConfigSnapshot = "";
@@ -16,6 +16,11 @@ type BulbResponse = {
     rinfo: dgram.RemoteInfo;
 };
 type BulbMessageResult = BulbStateSnapshot | BulbSystemConfigSnapshot;
+type RGB = {
+    r: number;
+    g: number;
+    b: number;
+};
 export declare class Lib {
     private havePulledInitialState;
     private static MS_TIMEOUT;
@@ -26,11 +31,7 @@ export declare class Lib {
     private port;
     protected bulbStateManager: BulbStateManager;
     constructor(ip: string, port?: number);
-    changeState(field: keyof BulbStateSnapshot | "color", change: "increase" | "decrease" | "toggle" | "set", value?: boolean | number | string | {
-        r: number;
-        g: number;
-        b: number;
-    }): Promise<void | BulbResponse[]>;
+    changeState(field: keyof BulbStateSnapshot | "colors", change: "increase" | "decrease" | "toggle" | "set", value?: boolean | number | string | RGB): Promise<void | BulbResponse[]>;
     private static sendUDPMessage;
     protected static discoverBulbs(): Promise<{
         ip: string;
@@ -38,26 +39,28 @@ export declare class Lib {
     }[] | undefined>;
     private pushBulbState;
     private pullBulbState;
+    private ensureSceneCleared;
 }
 declare class BulbStateManager implements BulbStateSnapshot {
     private bulbStateSnapshot;
     setStateFromSnapshot(snapshot: BulbStateSnapshot): void;
     getStateSnapshot(): BulbStateSnapshot;
+    clearScene(): void;
     get state(): boolean;
-    get sceneId(): number;
-    get r(): number;
-    get g(): number;
-    get b(): number;
-    get dimming(): number;
-    get c(): number;
-    get w(): number;
     set state(state: boolean);
-    set sceneId(sceneId: number);
+    get sceneId(): number | undefined;
+    set sceneId(sceneId: number | undefined);
+    get r(): number;
     set r(r: number);
+    get g(): number;
     set g(g: number);
+    get b(): number;
     set b(b: number);
+    get dimming(): number;
     set dimming(dimming: number);
-    set c(c: number);
+    get temp(): number | undefined;
+    set temp(temp: number | undefined);
+    get w(): number;
     set w(w: number);
 }
 export {};

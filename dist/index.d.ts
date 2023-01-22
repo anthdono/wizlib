@@ -1,1 +1,2 @@
-export { Api as Bulb } from "./lib/api";
+import Api from "./lib/api";
+export default Api;

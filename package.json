@@ -4,10 +4,16 @@
     "main": "dist/index.js",
     "types": "dist/lib/api.d.ts",
     "scripts": {
-        "build": "tsc -d"
+        "build": "rm -rf dist && tsc -d",
+        "buildTests": "node ./tests/buildTests.js",
+        "runTests": "ts-node ./tests/tests.ts",
+        "test": "npm run buildTests && npm run runTests"
     },
     "files": [
         "/dist"
     ],
-    "license": "MIT"
+    "license": "MIT",
+    "devDependencies": {
+        "@types/node": "^18.11.18"
+    }
 }

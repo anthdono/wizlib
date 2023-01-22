@@ -1,7 +1,8 @@
 /// <reference types="node" />
 import { Lib } from "./lib";
-export declare class Api extends Lib {
-    constructor(ip: string, port?: number);
+declare class Api extends Lib {
+    private constructor();
+    static createBulb(ip: string, port?: number): Api;
     static discover(): Promise<{
         ip: string;
         state: string;
@@ -9,12 +10,12 @@ export declare class Api extends Lib {
     toggleState(): Promise<void | {
         messageResult: "" | {
             state: boolean;
-            sceneId: number;
+            sceneId?: number | undefined;
             r: number;
             g: number;
             b: number;
             dimming: number;
-            c: number;
+            temp?: number | undefined;
             w: number;
         };
         rinfo: import("dgram").RemoteInfo;
@@ -39,3 +40,4 @@ export declare class Api extends Lib {
     increaseBlue(): void;
     decreaseBlue(): void;
 }
+export default Api;

@@ -1,10 +1,12 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Api = void 0;
 const lib_1 = require("./lib");
 class Api extends lib_1.Lib {
     constructor(ip, port) {
         super(ip, port);
+    }
+    static createBulb(ip, port) {
+        return new Api(ip, port);
     }
     static discover() {
         return lib_1.Lib.discoverBulbs();
@@ -49,26 +51,26 @@ class Api extends lib_1.Lib {
         this.changeState("w", "decrease");
     }
     setRGB(red, green, blue) {
-        this.changeState("color", "set", { r: red, g: green, b: blue });
+        this.changeState("colors", "set", { r: red, g: green, b: blue });
     }
     increaseRed() {
-        this.changeState("color", "increase", "r");
+        this.changeState("r", "increase");
     }
     decreaseRed() {
-        this.changeState("color", "decrease", "r");
+        this.changeState("r", "decrease");
     }
     increaseGreen() {
-        this.changeState("color", "increase", "g");
+        this.changeState("g", "increase");
     }
     decreaseGreen() {
-        this.changeState("color", "decrease", "g");
+        this.changeState("g", "decrease");
     }
     increaseBlue() {
-        this.changeState("color", "increase", "b");
+        this.changeState("b", "increase");
     }
     decreaseBlue() {
-        this.changeState("color", "decrease", "b");
+        this.changeState("b", "decrease");
     }
 }
-exports.Api = Api;
+exports.default = Api;
 //# sourceMappingURL=api.js.map

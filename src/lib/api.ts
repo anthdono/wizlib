@@ -1,16 +1,15 @@
 import { Lib } from "./lib";
 
-export class Api extends Lib {
-    constructor(ip: string, port?: number) {
+class Api extends Lib {
+    private constructor(ip: string, port?: number) {
         super(ip, port);
     }
-    //////////////////////////////////////////////////////
-
+    public static createBulb(ip: string, port?: number) {
+        return new Api(ip, port);
+    }
     public static discover() {
         return Lib.discoverBulbs();
     }
-    //////////////////////////////////////////////////////
-
     public toggleState() {
         return this.changeState("state", "toggle");
     }
@@ -20,9 +19,6 @@ export class Api extends Lib {
     public turnOn() {
         this.changeState("state", "set", true);
     }
-
-    //////////////////////////////////////////////////////
-
     public setBrightness(brightness: number) {
         this.changeState("dimming", "set", brightness);
     }
@@ -32,15 +28,9 @@ export class Api extends Lib {
     public decreaseBrightness() {
         this.changeState("dimming", "decrease");
     }
-
-    //////////////////////////////////////////////////////
-
     public setScene(sceneId: string) {
         this.changeState("sceneId", "set", sceneId);
     }
-
-    //////////////////////////////////////////////////////
-
     public setWhite(white: number) {
         this.changeState("w", "set", white);
     }
@@ -50,9 +40,6 @@ export class Api extends Lib {
     public decreaseWhite() {
         this.changeState("w", "decrease");
     }
-
-    //////////////////////////////////////////////////////
-
     public setTemperature(temperature: number) {
         this.changeState("w", "set", temperature);
     }
@@ -62,28 +49,27 @@ export class Api extends Lib {
     public decreaseTemperature() {
         this.changeState("w", "decrease");
     }
-
-    //////////////////////////////////////////////////////
-
     public setRGB(red: number, green: number, blue: number) {
-        this.changeState("color", "set", { r: red, g: green, b: blue });
+        this.changeState("colors", "set", { r: red, g: green, b: blue });
     }
     public increaseRed() {
-        this.changeState("color", "increase", "r");
+        this.changeState("r", "increase");
     }
     public decreaseRed() {
-        this.changeState("color", "decrease", "r");
+        this.changeState("r", "decrease");
     }
     public increaseGreen() {
-        this.changeState("color", "increase", "g");
+        this.changeState("g", "increase");
     }
     public decreaseGreen() {
-        this.changeState("color", "decrease", "g");
+        this.changeState("g", "decrease");
     }
     public increaseBlue() {
-        this.changeState("color", "increase", "b");
+        this.changeState("b", "increase");
     }
     public decreaseBlue() {
-        this.changeState("color", "decrease", "b");
+        this.changeState("b", "decrease");
     }
 }
+
+export default Api;
